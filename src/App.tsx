@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthService } from './services/auth.service';
 import { PipedriveCallback } from './components/PipedriveCallback';
+import { TeamleaderCallback } from './components/TeamleaderCallback';
 import { Dashboard } from './components/Dashboard';
 
 type CRMProvider = 'pipedrive' | 'odoo' | 'teamleader';
@@ -90,7 +91,13 @@ function App() {
   return (
     <Routes>
       <Route path="/auth/pipedrive/callback" element={
-        <PipedriveCallback 
+        <PipedriveCallback
+          onAuthSuccess={handleAuthSuccess}
+          onAuthError={handleAuthError}
+        />
+      } />
+      <Route path="/auth/teamleader/callback" element={
+        <TeamleaderCallback
           onAuthSuccess={handleAuthSuccess}
           onAuthError={handleAuthError}
         />

@@ -7,9 +7,9 @@ interface CallbackProps {
   onAuthError?: (error: string) => void;
 }
 
-export const PipedriveCallback: React.FC<CallbackProps> = ({ 
-  onAuthSuccess, 
-  onAuthError 
+export const TeamleaderCallback: React.FC<CallbackProps> = ({
+  onAuthSuccess,
+  onAuthError
 }) => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,6 @@ export const PipedriveCallback: React.FC<CallbackProps> = ({
         const state = urlParams.get('state');
         const error = urlParams.get('error');
 
-        // Check for OAuth errors
         if (error) {
           throw new Error(`OAuth error: ${error}`);
         }
@@ -32,15 +31,14 @@ export const PipedriveCallback: React.FC<CallbackProps> = ({
           throw new Error('No authorization code received');
         }
 
-        // Verify state parameter
-        const storedState = localStorage.getItem('pipedrive_oauth_state');
+        const storedState = localStorage.getItem('teamleader_oauth_state');
         if (!storedState || storedState !== state) {
           throw new Error('Invalid state parameter');
         }
 
-        const redirectUri = 'https://voicelink.me/auth/pipedrive/callback';
+        const redirectUri = 'https://voicelink.me/auth/teamleader/callback';
 
-        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pipedrive-auth`;
+        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/teamleader-auth`;
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
@@ -59,7 +57,6 @@ export const PipedriveCallback: React.FC<CallbackProps> = ({
           throw new Error(result.error || 'Authentication failed');
         }
 
-        // Set the session in Supabase
         if (result.session) {
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: result.session.access_token,
@@ -71,15 +68,13 @@ export const PipedriveCallback: React.FC<CallbackProps> = ({
           }
         }
 
-        // Clean up
-        localStorage.removeItem('pipedrive_oauth_state');
-        localStorage.setItem('userPlatform', 'pipedrive');
-        localStorage.setItem('auth_provider', 'pipedrive');
+        localStorage.removeItem('teamleader_oauth_state');
+        localStorage.setItem('userPlatform', 'teamleader');
+        localStorage.setItem('auth_provider', 'teamleader');
 
         setStatus('success');
         onAuthSuccess?.();
 
-        // Redirect to main app or dashboard
         setTimeout(() => {
           navigate('/dashboard');
         }, 1000);
@@ -89,9 +84,8 @@ export const PipedriveCallback: React.FC<CallbackProps> = ({
         setError(errorMessage);
         setStatus('error');
         onAuthError?.(errorMessage);
-        
-        // Clean up on error
-        localStorage.removeItem('pipedrive_oauth_state');
+
+        localStorage.removeItem('teamleader_oauth_state');
         localStorage.removeItem('userPlatform');
         localStorage.removeItem('auth_provider');
       }
@@ -106,7 +100,7 @@ export const PipedriveCallback: React.FC<CallbackProps> = ({
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-2xl font-semibold text-slate-800 mb-2">
-            Verbinden met Pipedrive...
+            Verbinden met Teamleader...
           </h2>
           <p className="text-slate-600">
             Even geduld, we verwerken je authenticatie.
@@ -129,7 +123,7 @@ export const PipedriveCallback: React.FC<CallbackProps> = ({
             Authenticatie mislukt
           </h2>
           <p className="text-slate-600 mb-6">
-            {error || 'Er is een fout opgetreden tijdens het verbinden met Pipedrive.'}
+            {error || 'Er is een fout opgetreden tijdens het verbinden met Teamleader.'}
           </p>
           <button
             onClick={() => navigate('/')}
@@ -154,7 +148,7 @@ export const PipedriveCallback: React.FC<CallbackProps> = ({
           Succesvol verbonden!
         </h2>
         <p className="text-slate-600 mb-6">
-          Je bent succesvol verbonden met Pipedrive. Je wordt doorgestuurd naar je dashboard.
+          Je bent succesvol verbonden met Teamleader. Je wordt doorgestuurd naar je dashboard.
         </p>
         <div className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg">
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
