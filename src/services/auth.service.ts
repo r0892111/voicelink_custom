@@ -40,7 +40,7 @@ export class AuthService {
 
   private async initiateTeamleaderAuth(): Promise<AuthResult> {
     const clientId = import.meta.env.VITE_TEAMLEADER_CLIENT_ID;
-    const redirectUri = `${window.location.protocol}//${window.location.host}/auth/teamleader/callback`;
+    const redirectUri = 'https://voicelink.me/auth/teamleader/callback';
 
     if (!clientId) {
       return { success: false, error: 'TeamLeader client ID not configured' };

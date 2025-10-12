@@ -35,7 +35,7 @@ function App() {
       description: 'All-in-one work management',
       color: 'from-blue-500 to-indigo-600',
       hoverColor: 'hover:from-blue-600 hover:to-indigo-700',
-      enabled: false,
+      enabled: true,
     },
   ];
 
@@ -49,7 +49,22 @@ function App() {
     setError(null);
 
     try {
-      const authService = AuthService.createPipedriveAuth();
+      let authService;
+
+      switch (crm) {
+        case 'pipedrive':
+          authService = AuthService.createPipedriveAuth();
+          break;
+        case 'teamleader':
+          authService = AuthService.createTeamleaderAuth();
+          break;
+        case 'odoo':
+          authService = AuthService.createOdooAuth();
+          break;
+        default:
+          throw new Error('Unknown CRM provider');
+      }
+
       const result = await authService.initiateAuth();
 
       if (!result.success && result.error) {
