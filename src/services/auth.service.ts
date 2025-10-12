@@ -65,7 +65,7 @@ export class AuthService {
 
   private async initiatePipedriveAuth(): Promise<AuthResult> {
     const clientId = import.meta.env.VITE_PIPEDRIVE_CLIENT_ID;
-    const redirectUri = `${window.location.protocol}//${window.location.host}/auth/pipedrive/callback`;
+    const redirectUri = 'https://voicelink.me/auth/pipedrive/callback';
 
     if (!clientId) {
       return { success: false, error: 'Pipedrive client ID not configured' };
