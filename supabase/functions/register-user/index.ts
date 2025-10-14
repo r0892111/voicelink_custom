@@ -10,7 +10,7 @@ interface RegisterRequest {
   email: string;
   password: string;
   phoneNumber?: string;
-  userType: 'pipedrive' | 'teamleader';
+  userType: 'pipedrive' | 'teamleader' | 'odoo';
 }
 
 Deno.serve(async (req: Request) => {
@@ -44,9 +44,9 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (userType !== 'pipedrive' && userType !== 'teamleader') {
+    if (userType !== 'pipedrive' && userType !== 'teamleader' && userType !== 'odoo') {
       return new Response(
-        JSON.stringify({ error: 'userType must be either "pipedrive" or "teamleader"' }),
+        JSON.stringify({ error: 'userType must be either "pipedrive", "teamleader", or "odoo"' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -79,7 +79,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const tableName = userType === 'pipedrive' ? 'pipedrive_users' : 'teamleader_users';
+    const tableName = userType === 'pipedrive' 
+      ? 'pipedrive_users' 
+      : userType === 'teamleader' 
+      ? 'teamleader_users' 
+      : 'odoo_users';
     
     const { data: userData, error: userError } = await supabase
       .from(tableName)
