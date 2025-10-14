@@ -1,20 +1,17 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Mail, Lock, AlertCircle, Zap, Building2, Phone, CheckCircle } from 'lucide-react';
 
 type CRMProvider = 'pipedrive' | 'odoo' | 'teamleader';
 
 export const Login: React.FC = () => {
-  const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [selectedCRM, setSelectedCRM] = useState<CRMProvider | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [isRegistered, setIsRegistered] = useState(false);
 
   const crmOptions = [
     {
@@ -47,48 +44,66 @@ export const Login: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
-    setSuccessMessage(null);
 
     try {
-      if (isSignup) {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          phone,
-          options: {
-            data: {
-              crm_platform: selectedCRM,
-              phone_number: phone,
-            },
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        phone,
+        options: {
+          data: {
+            crm_platform: selectedCRM,
+            phone_number: phone,
           },
-        });
+        },
+      });
 
-        if (signUpError) throw signUpError;
+      if (signUpError) throw signUpError;
 
-        if (data.user) {
-          setSuccessMessage('Account succesvol aangemaakt! Je kunt nu inloggen.');
-          setIsSignup(false);
-          setPassword('');
-          setPhone('');
-        }
-      } else {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) throw signInError;
-
-        if (data.session) {
-          navigate('/dashboard');
-        }
+      if (data.user) {
+        setIsRegistered(true);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : isSignup ? 'Registratie mislukt' : 'Inloggen mislukt');
+      setError(err instanceof Error ? err.message : 'Registratie mislukt');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isRegistered) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full blur-xl opacity-30"></div>
+                <div className="relative bg-white p-6 rounded-full shadow-lg">
+                  <CheckCircle className="w-16 h-16 text-green-600" />
+                </div>
+              </div>
+            </div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-4">
+              Registratie succesvol!
+            </h1>
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <p className="text-lg text-slate-700 mb-4">
+                Je account is aangemaakt voor <span className="font-semibold text-blue-600">{selectedCRM}</span>.
+              </p>
+              <p className="text-slate-600 mb-6">
+                We hebben je registratie ontvangen. Ons team zal je account activeren en je zult binnenkort toegang krijgen tot Voicelink.
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <span className="font-semibold">Let op:</span> Je ontvangt een bevestigingsmail op <span className="font-medium">{email}</span> zodra je account is geactiveerd.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
@@ -106,7 +121,7 @@ export const Login: React.FC = () => {
             Welkom bij Voicelink
           </h1>
           <p className="text-slate-600">
-            {isSignup ? 'Maak een account aan om te beginnen' : 'Log in om verder te gaan'}
+            Registreer je om te beginnen
           </p>
         </div>
 
@@ -156,16 +171,6 @@ export const Login: React.FC = () => {
             </div>
           )}
 
-          {successMessage && (
-            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-green-800 font-semibold mb-1">Gelukt!</h4>
-                <p className="text-green-700 text-sm">{successMessage}</p>
-              </div>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
@@ -185,25 +190,23 @@ export const Login: React.FC = () => {
               </div>
             </div>
 
-            {isSignup && (
-              <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 mb-2">
-                  Telefoonnummer
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required={isSignup}
-                    className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="+32 123 456 789"
-                  />
-                </div>
+            <div>
+              <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 mb-2">
+                Telefoonnummer
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="+32 123 456 789"
+                />
               </div>
-            )}
+            </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
@@ -231,27 +234,13 @@ export const Login: React.FC = () => {
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  {isSignup ? 'Registreren...' : 'Inloggen...'}
+                  Registreren...
                 </div>
               ) : (
-                isSignup ? 'Registreren' : 'Inloggen'
+                'Registreren'
               )}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsSignup(!isSignup);
-                setError(null);
-                setSuccessMessage(null);
-              }}
-              className="text-sm text-blue-600 hover:text-blue-700 font-semibold"
-            >
-              {isSignup ? 'Heb je al een account? Log in' : 'Nog geen account? Registreer je'}
-            </button>
-          </div>
         </div>
 
         <div className="text-center mt-6">
