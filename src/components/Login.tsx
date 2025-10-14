@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, AlertCircle, Zap, Building2 } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Zap, Building2, Phone, CheckCircle } from 'lucide-react';
 
 type CRMProvider = 'pipedrive' | 'odoo' | 'teamleader';
 
 export const Login: React.FC = () => {
+  const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [selectedCRM, setSelectedCRM] = useState<CRMProvider | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const crmOptions = [
@@ -34,7 +37,7 @@ export const Login: React.FC = () => {
     },
   ];
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedCRM) {
@@ -44,20 +47,44 @@ export const Login: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      if (isSignup) {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          phone,
+          options: {
+            data: {
+              crm_platform: selectedCRM,
+              phone_number: phone,
+            },
+          },
+        });
 
-      if (signInError) throw signInError;
+        if (signUpError) throw signUpError;
 
-      if (data.session) {
-        navigate('/dashboard');
+        if (data.user) {
+          setSuccessMessage('Account succesvol aangemaakt! Je kunt nu inloggen.');
+          setIsSignup(false);
+          setPassword('');
+          setPhone('');
+        }
+      } else {
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) throw signInError;
+
+        if (data.session) {
+          navigate('/dashboard');
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Inloggen mislukt');
+      setError(err instanceof Error ? err.message : isSignup ? 'Registratie mislukt' : 'Inloggen mislukt');
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +106,7 @@ export const Login: React.FC = () => {
             Welkom bij Voicelink
           </h1>
           <p className="text-slate-600">
-            Log in om verder te gaan
+            {isSignup ? 'Maak een account aan om te beginnen' : 'Log in om verder te gaan'}
           </p>
         </div>
 
@@ -129,7 +156,17 @@ export const Login: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          {successMessage && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-green-800 font-semibold mb-1">Gelukt!</h4>
+                <p className="text-green-700 text-sm">{successMessage}</p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
                 E-mailadres
@@ -147,6 +184,26 @@ export const Login: React.FC = () => {
                 />
               </div>
             </div>
+
+            {isSignup && (
+              <div>
+                <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 mb-2">
+                  Telefoonnummer
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required={isSignup}
+                    className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="+32 123 456 789"
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
@@ -174,13 +231,27 @@ export const Login: React.FC = () => {
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Inloggen...
+                  {isSignup ? 'Registreren...' : 'Inloggen...'}
                 </div>
               ) : (
-                'Inloggen'
+                isSignup ? 'Registreren' : 'Inloggen'
               )}
             </button>
           </form>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignup(!isSignup);
+                setError(null);
+                setSuccessMessage(null);
+              }}
+              className="text-sm text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              {isSignup ? 'Heb je al een account? Log in' : 'Nog geen account? Registreer je'}
+            </button>
+          </div>
         </div>
 
         <div className="text-center mt-6">
