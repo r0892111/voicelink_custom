@@ -8,7 +8,6 @@ const corsHeaders = {
 
 interface RegisterRequest {
   email: string;
-  password: string;
   phoneNumber?: string;
   userType: 'pipedrive' | 'teamleader' | 'odoo';
 }
@@ -32,11 +31,11 @@ Deno.serve(async (req: Request) => {
       },
     });
 
-    const { email, password, phoneNumber, userType }: RegisterRequest = await req.json();
+    const { email, phoneNumber, userType }: RegisterRequest = await req.json();
 
-    if (!email || !password || !userType) {
+    if (!email || !userType) {
       return new Response(
-        JSON.stringify({ error: 'Email, password, and userType are required' }),
+        JSON.stringify({ error: 'Email and userType are required' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -54,9 +53,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const tempPassword = crypto.randomUUID();
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
-      password,
+      password: tempPassword,
     });
 
     if (authError) {

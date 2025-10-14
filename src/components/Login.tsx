@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, AlertCircle, Zap, Building2, Phone, CheckCircle } from 'lucide-react';
+import { Mail, AlertCircle, Zap, Building2, Phone, CheckCircle } from 'lucide-react';
 
 type CRMProvider = 'pipedrive' | 'odoo' | 'teamleader';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
   const [selectedCRM, setSelectedCRM] = useState<CRMProvider | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +55,6 @@ export const Login: React.FC = () => {
         },
         body: JSON.stringify({
           email,
-          password,
           phoneNumber: phone,
           userType: selectedCRM,
         }),
@@ -212,24 +210,6 @@ export const Login: React.FC = () => {
                   required
                   className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="+32 123 456 789"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
-                Wachtwoord
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="••••••••"
                 />
               </div>
             </div>
