@@ -1,17 +1,47 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, AlertCircle, Zap } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Zap, Building2 } from 'lucide-react';
+
+type CRMProvider = 'pipedrive' | 'odoo' | 'teamleader';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedCRM, setSelectedCRM] = useState<CRMProvider | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const crmOptions = [
+    {
+      id: 'pipedrive' as CRMProvider,
+      name: 'Pipedrive',
+      color: 'from-emerald-500 to-teal-600',
+      enabled: true,
+    },
+    {
+      id: 'odoo' as CRMProvider,
+      name: 'Odoo',
+      color: 'from-orange-500 to-red-600',
+      enabled: false,
+    },
+    {
+      id: 'teamleader' as CRMProvider,
+      name: 'Teamleader',
+      color: 'from-blue-500 to-cyan-600',
+      enabled: true,
+    },
+  ];
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!selectedCRM) {
+      setError('Selecteer eerst een CRM-platform');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -54,6 +84,41 @@ export const Login: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Selecteer je CRM-platform
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              {crmOptions.map((crm) => (
+                <button
+                  key={crm.id}
+                  type="button"
+                  onClick={() => crm.enabled && setSelectedCRM(crm.id)}
+                  disabled={!crm.enabled}
+                  className={`relative p-4 rounded-lg border-2 transition-all duration-200 ${
+                    selectedCRM === crm.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
+                  } ${
+                    !crm.enabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                >
+                  {!crm.enabled && (
+                    <div className="absolute -top-2 -right-2 bg-slate-600 text-white text-xs px-2 py-0.5 rounded-full">
+                      Soon
+                    </div>
+                  )}
+                  <div className={`w-12 h-12 mx-auto mb-2 bg-gradient-to-br ${crm.color} rounded-lg flex items-center justify-center`}>
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-xs font-semibold text-slate-700 text-center">
+                    {crm.name}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -103,7 +168,7 @@ export const Login: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !selectedCRM}
               className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (
