@@ -86,7 +86,8 @@ Deno.serve(async (req: Request) => {
       .insert({
         id: authData.user.id,
         email: email,
-        phone_number: phoneNumber || null,
+        whatsapp_number: phoneNumber || null,
+        whatsapp_status: 'active',
       })
       .select()
       .single();
@@ -110,7 +111,8 @@ Deno.serve(async (req: Request) => {
           id: authData.user.id,
           email: authData.user.email,
           userType,
-          phoneNumber: userData.phone_number,
+          whatsappNumber: userData.whatsapp_number,
+          whatsappStatus: userData.whatsapp_status,
         },
       }),
       {
