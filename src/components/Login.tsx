@@ -46,21 +46,29 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        phone,
-        options: {
-          data: {
-            crm_platform: selectedCRM,
-            phone_number: phone,
-          },
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-custom-user`;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email,
+          password,
+          phoneNumber: phone,
+          userType: selectedCRM,
+        }),
       });
 
-      if (signUpError) throw signUpError;
+      const data = await response.json();
 
-      if (data.user) {
+      if (!response.ok) {
+        throw new Error(data.error || 'Registratie mislukt');
+      }
+
+      if (data.success) {
         setIsRegistered(true);
       }
     } catch (err) {
