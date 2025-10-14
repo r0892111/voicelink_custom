@@ -24,7 +24,7 @@ export const Login: React.FC = () => {
       id: 'odoo' as CRMProvider,
       name: 'Odoo',
       color: 'from-orange-500 to-red-600',
-      enabled: false,
+      enabled: true,
     },
     {
       id: 'teamleader' as CRMProvider,
